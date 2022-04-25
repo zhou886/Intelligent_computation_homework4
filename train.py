@@ -12,18 +12,23 @@ from time import strftime
 from datetime import datetime
 from multiprocessing import Process
 
+
 def main():
     learning_rate = 0.001
-    batch_size = 128
+    batch_size = 64
 
-    # 创建训练集和测试集
-    test_set = MyDataset(r'.\dataset', train=False, size=set_size)
-    train_set = MyDataset(r'.\dataset', train=True, size=set_size)
+    # test_set = MyDataset(r'.\dataset', train=False, size=512)
+    # train_set = MyDataset(r'.\dataset', train=True, size=512)
+    # train(test_set, train_set, 512, 0, 0.001, 64)
 
-    for set_size in (512,1024,2048,4096,8192):
+    for set_size in (512, 1024, 2048, 4096, 8192):
         process_list = []
-        for i in range(5):
-            p = Process(target=train, args=(test_set, train_set, set_size, learning_rate, batch_size))
+        # 创建训练集和测试集
+        test_set = MyDataset(r'.\dataset', train=False, size=set_size)
+        train_set = MyDataset(r'.\dataset', train=True, size=set_size)
+        for i in range(3):
+            p = Process(target=train, args=(test_set, train_set,
+                        set_size, i, learning_rate, batch_size))
             p.start()
             process_list.append(p)
 
@@ -31,7 +36,7 @@ def main():
             p.join()
 
 
-def train(test_set, train_set, set_size, learning_rate=0.001, batch_size=256):
+def train(test_set, train_set, set_size, cnt, learning_rate=0.001, batch_size=256):
     # 创建神经网络
     myNetwork = MyNetwork()
 
@@ -52,7 +57,8 @@ def train(test_set, train_set, set_size, learning_rate=0.001, batch_size=256):
     optimizer = torch.optim.SGD(myNetwork.parameters(), lr=learning_rate)
 
     # 创建存放训练模型的文件夹
-    os.mkdir(".\\model_setsize{}_SGD_lr{}_batchsize{}".format(set_size, learning_rate, batch_size))
+    os.mkdir(".\\model{}_setsize{}_SGD_lr{}_batchsize{}".format(
+        cnt, set_size, learning_rate, batch_size))
 
     # 初始化总训练次数和总测试次数
     total_train_step = 0
@@ -63,7 +69,7 @@ def train(test_set, train_set, set_size, learning_rate=0.001, batch_size=256):
 
     # 使用tensoboard查看训练变化过程
     writer = SummaryWriter(
-        "logs_setsize{}_SGD_lr{}_batchsize{}".format(set_size,learning_rate, batch_size))
+        "logs{}_setsize{}_SGD_lr{}_batchsize{}".format(cnt, set_size, learning_rate, batch_size))
 
     for i in range(epoch):
         print("------Epoch {} start------".format(i))
@@ -132,10 +138,15 @@ def train(test_set, train_set, set_size, learning_rate=0.001, batch_size=256):
 
         # 保存模型
         now = datetime.now()
-        torch.save(myNetwork.state_dict(),
-                   os.path.join(os.getcwd(), 'model_setsize{}_SGD_lr{}_batchsize{}'.format(set_size, learning_rate, batch_size), "MyNetwork_time{}_accuracy{}.pth".format(
-                       now.strftime(r"%Y-%m%d-%H%M-%S"), round(total_test_accuracy.item(), 2)))
-                   )
-        print("Network module has been saved.")
+        if i % 10 == 0:
+            torch.save(myNetwork.state_dict(),
+                    os.path.join(os.getcwd(), 'model{}_setsize{}_SGD_lr{}_batchsize{}'.format(cnt, set_size, learning_rate, batch_size), "MyNetwork_time{}_accuracy{}.pth".format(
+                        now.strftime(r"%Y-%m%d-%H%M-%S"), round(total_test_accuracy.item(), 2)))
+                    )
+            print("Network module has been saved.")
 
     writer.close()
+
+
+if __name__ == '__main__':
+    main()

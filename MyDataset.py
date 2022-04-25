@@ -11,7 +11,8 @@ class MyDataset(Dataset):
         self.root_path = root_path                      # 保存根目录
         self.label_path = os.listdir(self.root_path)    # 获得所有标签
         self.imgAndLabel = []                           # 用于存放图像地址和对应标签
-        self.transform = transforms.Compose([transforms.ToTensor(), transforms.Resize(64,64)])
+        self.transform = transforms.Compose([transforms.ToTensor(), transforms.Resize((64,64))])
+        size//=2
         if train:
             # 如果用作训练集
             for label in self.label_path:
@@ -20,7 +21,6 @@ class MyDataset(Dataset):
 
                 # 将数据集的前80%放在imgAndLabel中用作训练集
                 total_img_size = round(size*0.8)
-                self.size = total_img_size
                 for i in range(total_img_size):
                     self.imgAndLabel.append(
                         (os.path.join(self.root_path,
@@ -34,12 +34,13 @@ class MyDataset(Dataset):
 
                 # 将数据集的后20%放在imgAndLabel中用作测试集
                 total_img_size = round(size*0.8)
-                self.size = size-total_img_size
                 for i in range(total_img_size, size):
                     self.imgAndLabel.append(
                         (os.path.join(self.root_path,
                          label, img_path[i]), label)
                     )
+        
+        self.size = len(self)
 
     def __getitem__(self, index):
         # 获得图像路径和标签
