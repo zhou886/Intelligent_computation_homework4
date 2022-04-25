@@ -11,20 +11,17 @@ import os
 from time import strftime
 from datetime import datetime
 
-
-# 获得训练集和测试集大小
-test_set_size = len(test_set)
-train_set_size = len(train_set)
-
-learning_rate = 0
-batch_size = 256
-
 def main():
+    learning_rate = 0.001
+    batch_size = 256
+
     # 创建训练集和测试集
     test_set = MyDataset(r'.\dataset', train=False, transform=torchvision.transforms.Compose(
         [ToTensor(), Resize([64, 64])]))
     train_set = MyDataset(r'.\dataset', train=True, transform=torchvision.transforms.Compose(
         [ToTensor(), Resize([64, 64])]))
+
+    train(test_set, train_set, "large", learning_rate, batch_size)
 
 def train(test_set, train_set, set_size, learning_rate=0.001, batch_size=256):
     # 创建神经网络
