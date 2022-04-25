@@ -1,5 +1,4 @@
 import torch
-import numpy as np
 from torch.utils.data import Dataset
 import cv2 as cv
 import os
@@ -7,15 +6,12 @@ from torchvision import transforms
 
 
 class MyDataset(Dataset):
-    def __init__(self, root_path, train, rate):
+    def __init__(self, root_path, train, size):
         super().__init__()
         self.root_path = root_path                      # 保存根目录
         self.label_path = os.listdir(self.root_path)    # 获得所有标签
         self.imgAndLabel = []                           # 用于存放图像地址和对应标签
-        if rate == 1:
-            self.transform = transforms.Compose([transforms.ToTensor(), transforms.Resize(64,64)])
-        else
-            self.transform = transforms.Compose([transforms.ToTensor(), transforms.Resize(64,64)])
+        self.transform = transforms.Compose([transforms.ToTensor(), transforms.Resize(64,64)])
         if train:
             # 如果用作训练集
             for label in self.label_path:
@@ -23,8 +19,7 @@ class MyDataset(Dataset):
                 img_path = os.listdir(path)
 
                 # 将数据集的前80%放在imgAndLabel中用作训练集
-                np.random.shuffle(img_path)
-                total_img_size = round(round(len(img_path)*rate)*0.8)
+                total_img_size = round(size*0.8)
                 self.size = total_img_size
                 for i in range(total_img_size):
                     self.imgAndLabel.append(
@@ -38,9 +33,9 @@ class MyDataset(Dataset):
                 img_path = os.listdir(path)
 
                 # 将数据集的后20%放在imgAndLabel中用作测试集
-                total_img_size = round(round(len(img_path)*rate)*0.8)
-                self.size = len(img_path)-total_img_size
-                for i in range(total_img_size, round(len(img_path)*rate)):
+                total_img_size = round(size*0.8)
+                self.size = size-total_img_size
+                for i in range(total_img_size, size):
                     self.imgAndLabel.append(
                         (os.path.join(self.root_path,
                          label, img_path[i]), label)

@@ -10,18 +10,26 @@ import torchvision
 import os
 from time import strftime
 from datetime import datetime
+from multiprocessing import Process
 
 def main():
     learning_rate = 0.001
-    batch_size = 256
+    batch_size = 128
 
     # 创建训练集和测试集
-    test_set = MyDataset(r'.\dataset', train=False, transform=torchvision.transforms.Compose(
-        [ToTensor(), Resize([64, 64])]))
-    train_set = MyDataset(r'.\dataset', train=True, transform=torchvision.transforms.Compose(
-        [ToTensor(), Resize([64, 64])]))
+    test_set = MyDataset(r'.\dataset', train=False, size=set_size)
+    train_set = MyDataset(r'.\dataset', train=True, size=set_size)
 
-    train(test_set, train_set, "large", learning_rate, batch_size)
+    for set_size in (512,1024,2048,4096,8192):
+        process_list = []
+        for i in range(5):
+            p = Process(target=train, args=(test_set, train_set, set_size, learning_rate, batch_size))
+            p.start()
+            process_list.append(p)
+
+        for p in process_list:
+            p.join()
+
 
 def train(test_set, train_set, set_size, learning_rate=0.001, batch_size=256):
     # 创建神经网络
@@ -44,18 +52,18 @@ def train(test_set, train_set, set_size, learning_rate=0.001, batch_size=256):
     optimizer = torch.optim.SGD(myNetwork.parameters(), lr=learning_rate)
 
     # 创建存放训练模型的文件夹
-    os.mkdir(".\\model_setsize_{}_SGD_lr{}_batchsize{}".format(set_size, learning_rate, batch_size))
+    os.mkdir(".\\model_setsize{}_SGD_lr{}_batchsize{}".format(set_size, learning_rate, batch_size))
 
     # 初始化总训练次数和总测试次数
     total_train_step = 0
     total_test_step = 0
 
     # 设置epoch
-    epoch = 200
+    epoch = 100
 
     # 使用tensoboard查看训练变化过程
     writer = SummaryWriter(
-        "logs_SGD_lr{}_batchsize{}".format(learning_rate, batch_size))
+        "logs_setsize{}_SGD_lr{}_batchsize{}".format(set_size,learning_rate, batch_size))
 
     for i in range(epoch):
         print("------Epoch {} start------".format(i))
@@ -125,7 +133,7 @@ def train(test_set, train_set, set_size, learning_rate=0.001, batch_size=256):
         # 保存模型
         now = datetime.now()
         torch.save(myNetwork.state_dict(),
-                   os.path.join(os.getcwd(), 'model_SGD_lr{}_batchsize{}'.format(learning_rate, batch_size), "MyNetwork_time{}_accuracy{}.pth".format(
+                   os.path.join(os.getcwd(), 'model_setsize{}_SGD_lr{}_batchsize{}'.format(set_size, learning_rate, batch_size), "MyNetwork_time{}_accuracy{}.pth".format(
                        now.strftime(r"%Y-%m%d-%H%M-%S"), round(total_test_accuracy.item(), 2)))
                    )
         print("Network module has been saved.")
