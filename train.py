@@ -13,22 +13,6 @@ from datetime import datetime
 from multiprocessing import Process
 
 
-def use_rand_crop_enhence_data():
-    learning_rate = 0.001
-    batch_size = 64
-    
-    for set_size in (256, 512):
-        process_list = []
-        test_set = MyDataset(r'.\dataset', train=False, size=set_size, manification=2, rand_crop=True)
-        train_set = MyDataset(r'.\dataset', train=True, size=set_size, manification=2, rand_crop=True)
-        for i in range(3):
-            p = Process(target=train, args=(test_set, train_set,
-                        set_size, i, learning_rate, batch_size))
-            p.start()
-            process_list.append(p)
-
-        for p in process_list:
-            p.join()
 
 def dataset_size_influence():
     learning_rate = 0.001
@@ -48,7 +32,29 @@ def dataset_size_influence():
         for p in process_list:
             p.join()
 
-def train(test_set, train_set, set_size, cnt, k_fold, learning_rate=0.001, batch_size=256):
+def use_rand_crop_enhence_data():
+    learning_rate = 0.001
+    batch_size = 64
+
+    # set_size = 256
+    # test_set = MyDataset(r'.\dataset', train=False, size=set_size, manification=2, rand_crop=True)
+    # train_set = MyDataset(r'.\dataset', train=True, size=set_size, manification=2, rand_crop=True)
+    # train(test_set, train_set, 256, 0, learning_rate, batch_size)
+        
+    for set_size in (256, 512):
+        process_list = []
+        test_set = MyDataset(r'.\dataset', train=False, size=set_size, manification=2, rand_crop=True)
+        train_set = MyDataset(r'.\dataset', train=True, size=set_size, manification=2, rand_crop=True)
+        for i in range(3):
+            p = Process(target=train, args=(test_set, train_set,
+                        set_size, i, learning_rate, batch_size))
+            p.start()
+            process_list.append(p)
+
+        for p in process_list:
+            p.join()
+
+def train(test_set, train_set, set_size, cnt, learning_rate=0.001, batch_size=256):
     # 创建神经网络
     myNetwork = MyNetwork()
 
@@ -77,7 +83,7 @@ def train(test_set, train_set, set_size, cnt, k_fold, learning_rate=0.001, batch
     total_test_step = 0
 
     # 设置epoch
-    epoch = 100
+    epoch = 300
 
     # 使用tensoboard查看训练变化过程
     writer = SummaryWriter(
@@ -161,4 +167,4 @@ def train(test_set, train_set, set_size, cnt, k_fold, learning_rate=0.001, batch
 
 
 if __name__ == '__main__':
-    main()
+    use_rand_crop_enhence_data()

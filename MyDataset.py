@@ -64,6 +64,7 @@ class MyDataset(Dataset):
                                 (os.path.join(self.root_path, label, img_path[i]), label))
                                 
         self.size = len(self)
+        self.cache = {}
 
     def get_k_fold_data(self, i):
         """
@@ -84,6 +85,9 @@ class MyDataset(Dataset):
             raise Exception()
 
     def __getitem__(self, index):
+        if index in self.cache:
+            return self.cache[index]
+
         # 获得图像路径和标签
         img_path, label = self.imgAndLabel[index]
 
@@ -101,7 +105,8 @@ class MyDataset(Dataset):
                 label_tensor = torch.tensor(i)
                 break
 
-        return img, label_tensor
+        self.cache[index] = (img, label_tensor)
+        return  self.cache[index]
 
     def __len__(self):
         return len(self.imgAndLabel)
